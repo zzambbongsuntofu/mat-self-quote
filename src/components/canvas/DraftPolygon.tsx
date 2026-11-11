@@ -1,5 +1,6 @@
 import { Circle, Line } from 'react-konva'
 import type { Point } from '@/types'
+import { snapPx } from '@/utils/geometry'
 import { EdgeLabel } from './EdgeLabel'
 
 interface DraftPolygonProps {
@@ -18,7 +19,7 @@ const STROKE = '#0058a3'
 export function DraftPolygon({ points, cursor, canClose, scale }: DraftPolygonProps) {
   if (points.length === 0) return null
 
-  const flat = points.flatMap((p) => [p.x * scale, p.y * scale])
+  const flat = points.flatMap((p) => [snapPx(p.x, scale), snapPx(p.y, scale)])
   const last = points[points.length - 1]
   const first = points[0]
 
@@ -26,7 +27,14 @@ export function DraftPolygon({ points, cursor, canClose, scale }: DraftPolygonPr
     <>
       {/* 확정된 변 */}
       {points.length > 1 && (
-        <Line points={flat} stroke={STROKE} strokeWidth={2} lineJoin="miter" listening={false} />
+        <Line
+          points={flat}
+          stroke={STROKE}
+          strokeWidth={2}
+          lineJoin="miter"
+          perfectDrawEnabled={false}
+          listening={false}
+        />
       )}
       {points.slice(0, -1).map((a, i) => (
         <EdgeLabel key={`d-${i}`} a={a} b={points[i + 1]} scale={scale} />
@@ -36,7 +44,12 @@ export function DraftPolygon({ points, cursor, canClose, scale }: DraftPolygonPr
       {cursor && !canClose && (
         <>
           <Line
-            points={[last.x * scale, last.y * scale, cursor.x * scale, cursor.y * scale]}
+            points={[
+              snapPx(last.x, scale),
+              snapPx(last.y, scale),
+              snapPx(cursor.x, scale),
+              snapPx(cursor.y, scale),
+            ]}
             stroke={STROKE}
             strokeWidth={1.5}
             dash={[6, 4]}
@@ -49,7 +62,12 @@ export function DraftPolygon({ points, cursor, canClose, scale }: DraftPolygonPr
       {/* 닫기 미리보기: 마지막 점 → 시작점 */}
       {canClose && points.length >= 2 && (
         <Line
-          points={[last.x * scale, last.y * scale, first.x * scale, first.y * scale]}
+          points={[
+            snapPx(last.x, scale),
+            snapPx(last.y, scale),
+            snapPx(first.x, scale),
+            snapPx(first.y, scale),
+          ]}
           stroke="#16a34a"
           strokeWidth={1.5}
           dash={[6, 4]}
@@ -61,8 +79,8 @@ export function DraftPolygon({ points, cursor, canClose, scale }: DraftPolygonPr
       {points.map((p, i) => (
         <Circle
           key={`v-${i}`}
-          x={p.x * scale}
-          y={p.y * scale}
+          x={snapPx(p.x, scale)}
+          y={snapPx(p.y, scale)}
           radius={i === 0 ? (canClose ? 8 : 6) : 4}
           fill={i === 0 ? (canClose ? '#16a34a' : '#ffffff') : STROKE}
           stroke={i === 0 ? (canClose ? '#16a34a' : STROKE) : undefined}

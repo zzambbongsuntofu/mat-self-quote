@@ -195,11 +195,15 @@ export interface TilingResult {
   areaMm2: number
 }
 
-/** 한 축에서 시도할 그리드 원점 후보 */
+/**
+ * 한 축에서 시도할 그리드 원점 후보.
+ * 원점은 항상 10cm 격자 위다. 500mm 처럼 절반이 50mm 인 규격도
+ * 벽선과 같은 선에 붙는다.
+ */
 const axisCandidates = (start: number, length: number, size: number, mode: TilingMode): number[] => {
   const center = snap(start + length / 2)
-  const list = [center, center - size / 2] // 중심에 타일 모서리 / 타일 중심
-  if (mode === 'economy') list.push(start, start + length) // 왼쪽(위) 벽 / 오른쪽(아래) 벽에 붙여 시작
+  const list = [center, snap(center - size / 2)] // 중심에 타일 모서리 / 타일 중심
+  if (mode === 'economy') list.push(snap(start), snap(start + length)) // 벽에 붙여 시작
   return [...new Set(list)]
 }
 

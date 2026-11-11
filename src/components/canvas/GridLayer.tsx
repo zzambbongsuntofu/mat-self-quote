@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Layer, Line, Rect, Text } from 'react-konva'
 import { GRID_UNIT_MM } from '@/constants'
+import { snapPx } from '@/utils/geometry'
 
 interface GridLayerProps {
   width: number
@@ -21,27 +22,24 @@ const LABEL_COLOR = '#a8a29e'
  */
 export function GridLayer({ width, height, scale, offset }: GridLayerProps) {
   const lines = useMemo(() => {
-    const minorPx = GRID_UNIT_MM * scale
-    const majorPx = minorPx * 10
-    const showMinor = minorPx >= 6
-
+    const stepMm = GRID_UNIT_MM * scale >= 6 ? GRID_UNIT_MM : GRID_UNIT_MM * 10
     const items: { points: number[]; major: boolean }[] = []
     const labels: { x: number; y: number; text: string; axis: 'x' | 'y' }[] = []
 
-    const step = showMinor ? minorPx : majorPx
-    const startX = ((offset.x % step) + step) % step
-    const startY = ((offset.y % step) + step) % step
+    const firstMm = (origin: number) => Math.floor(-origin / scale / stepMm) * stepMm
+    const lastMm = (origin: number, extent: number) =>
+      Math.ceil((extent - origin) / scale / stepMm) * stepMm
 
-    for (let x = startX; x <= width; x += step) {
-      const mm = Math.round((x - offset.x) / scale)
+    for (let mm = firstMm(offset.x); mm <= lastMm(offset.x, width); mm += stepMm) {
+      const x = offset.x + snapPx(mm, scale)
       const major = mm % 1000 === 0
       items.push({ points: [x, 0, x, height], major })
       if (major && mm !== 0) {
         labels.push({ x: x + 4, y: 4, text: `${mm / 1000}m`, axis: 'x' })
       }
     }
-    for (let y = startY; y <= height; y += step) {
-      const mm = Math.round((y - offset.y) / scale)
+    for (let mm = firstMm(offset.y); mm <= lastMm(offset.y, height); mm += stepMm) {
+      const y = offset.y + snapPx(mm, scale)
       const major = mm % 1000 === 0
       items.push({ points: [0, y, width, y], major })
       if (major && mm !== 0) {
@@ -60,6 +58,7 @@ export function GridLayer({ width, height, scale, offset }: GridLayerProps) {
           points={l.points}
           stroke={l.major ? MAJOR_COLOR : MINOR_COLOR}
           strokeWidth={1}
+          perfectDrawEnabled={false}
         />
       ))}
       {lines.labels.map((l, i) => (

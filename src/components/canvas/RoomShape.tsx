@@ -10,6 +10,7 @@ import {
   polygonCentroid,
   simplifyOrthoPolygon,
   snap,
+  snapPx,
   translatePolygon,
 } from '@/utils/geometry'
 import { formatArea } from '@/utils/format'
@@ -22,7 +23,8 @@ const ROOM_FILL_SELECTED = '#f5f9fd'
 const LABEL_W = 120
 const LABEL_H = 38
 
-const toFlat = (pts: Point[], scale: number) => pts.flatMap((p) => [p.x * scale, p.y * scale])
+const toFlat = (pts: Point[], scale: number) =>
+  pts.flatMap((p) => [snapPx(p.x, scale), snapPx(p.y, scale)])
 
 interface RoomBodyProps {
   room: Room
@@ -45,11 +47,9 @@ export function RoomBody({ room, scale, selected, interactive, onSelect, onChang
       closed
       fill={selected ? ROOM_FILL_SELECTED : ROOM_FILL}
       stroke={selected ? ROOM_STROKE_SELECTED : ROOM_STROKE}
-      strokeWidth={selected ? 2.5 : 2}
+      strokeWidth={2}
       lineJoin="miter"
-      shadowColor="rgba(0,0,0,0.12)"
-      shadowBlur={selected ? 0 : 6}
-      shadowOffsetY={2}
+      perfectDrawEnabled={false}
       draggable={interactive}
       onClick={onSelect}
       onTap={onSelect}
@@ -83,8 +83,9 @@ export function RoomOutline({ room, scale, selected }: RoomOutlineProps) {
       points={toFlat(room.points, scale)}
       closed
       stroke={selected ? ROOM_STROKE_SELECTED : ROOM_STROKE}
-      strokeWidth={selected ? 2.5 : 2}
+      strokeWidth={2}
       lineJoin="miter"
+      perfectDrawEnabled={false}
       listening={false}
     />
   )
@@ -126,7 +127,7 @@ export function RoomOverlay({ room, scale, selected, interactive, hasTiles, onCh
       {/* 이름 / 면적 */}
       {hasTiles ? (
         // 타일이 깔리면 매트 번호를 가리지 않도록 도면 바깥 좌상단에 한 줄로 표시
-        <Group x={bbox.x * scale} y={bbox.y * scale - 22} listening={false}>
+        <Group x={snapPx(bbox.x, scale)} y={snapPx(bbox.y, scale) - 22} listening={false}>
           <Rect
             width={labelWidth}
             height={18}
@@ -148,7 +149,7 @@ export function RoomOverlay({ room, scale, selected, interactive, hasTiles, onCh
           />
         </Group>
       ) : (
-        <Group x={centroid.x * scale} y={centroid.y * scale} listening={false}>
+        <Group x={snapPx(centroid.x, scale)} y={snapPx(centroid.y, scale)} listening={false}>
           <Text
             x={-LABEL_W / 2}
             y={-LABEL_H / 2}
@@ -174,8 +175,8 @@ export function RoomOverlay({ room, scale, selected, interactive, hasTiles, onCh
         points.map((a, i) => {
           const b = points[(i + 1) % n]
           const horizontal = isHorizontal(a, b)
-          const mx = ((a.x + b.x) / 2) * scale
-          const my = ((a.y + b.y) / 2) * scale
+          const mx = (snapPx(a.x, scale) + snapPx(b.x, scale)) / 2
+          const my = (snapPx(a.y, scale) + snapPx(b.y, scale)) / 2
           return (
             <Rect
               key={`eh-${i}`}
@@ -219,8 +220,8 @@ export function RoomOverlay({ room, scale, selected, interactive, hasTiles, onCh
         points.map((p, i) => (
           <Circle
             key={`vh-${i}`}
-            x={p.x * scale}
-            y={p.y * scale}
+            x={snapPx(p.x, scale)}
+            y={snapPx(p.y, scale)}
             radius={5.5}
             fill="#ffffff"
             stroke={stroke}

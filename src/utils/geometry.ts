@@ -19,6 +19,23 @@ export const snapPoint = (p: Point, unit: number = GRID_UNIT_MM): Point => ({
 /** mm → px */
 export const mmToPx = (mm: number, scale: number): number => mm * scale
 
+/**
+ * 화면에 그릴 px. 반올림해서 벽선, 매트, 격자가 같은 픽셀에 맞는다.
+ * 소수 px 로 그리면 선이 서로 1px 어긋나 보인다.
+ */
+export const snapPx = (mm: number, scale: number): number => Math.round(mm * scale)
+
+/** 시작·끝 mm 를 같은 반올림으로 잡아 이웃한 도형의 변이 한 픽셀을 공유하게 한다 */
+export const spanPx = (
+  originMm: number,
+  sizeMm: number,
+  scale: number,
+): { pos: number; size: number } => {
+  const pos = snapPx(originMm, scale)
+  const end = snapPx(originMm + sizeMm, scale)
+  return { pos, size: Math.max(0, end - pos) }
+}
+
 /** px → mm */
 export const pxToMm = (px: number, scale: number): number => px / scale
 

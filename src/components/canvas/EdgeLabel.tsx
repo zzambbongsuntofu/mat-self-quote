@@ -2,6 +2,7 @@ import { Label, Tag, Text } from 'react-konva'
 import type { Point } from '@/types'
 import { edgeLength, isHorizontal } from '@/utils/geometry'
 import { formatLength } from '@/utils/format'
+import { snapPx } from '@/utils/geometry'
 
 interface EdgeLabelProps {
   a: Point
@@ -19,8 +20,8 @@ export function EdgeLabel({ a, b, scale, color = '#0058a3', gap = 10 }: EdgeLabe
   const len = edgeLength(a, b)
   if (len <= 0) return null
 
-  const mx = ((a.x + b.x) / 2) * scale
-  const my = ((a.y + b.y) / 2) * scale
+  const mx = (snapPx(a.x, scale) + snapPx(b.x, scale)) / 2
+  const my = (snapPx(a.y, scale) + snapPx(b.y, scale)) / 2
   const horizontal = isHorizontal(a, b)
 
   return (
